@@ -6,6 +6,6 @@ public class CountHelper {
      */
     //public long getDistance()
     public void add(){
-
+        
     }
 }

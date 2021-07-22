@@ -1,4 +1,4 @@
-package com.example.algorithm.DP;
+package com.example.algorithm.Helper;
 
 public class CountHelper {
     /**

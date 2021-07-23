@@ -3,6 +3,8 @@ package com.example.algorithm.utils;
 import android.app.Activity;
 import android.content.Context;
 
+import com.example.algorithm.Helper.GeoHelper;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
@@ -23,10 +25,16 @@ public class CsvUtil {
     private Context context;
     private ArrayList<String[]> lists = new ArrayList<String[]>();
     private String getStr[] = new String[2];
-
+    private GeoHelper.Pt pt;
+    private String[] getStr2;
+    private GeoHelper geoHelper = new GeoHelper();
     public CsvUtil(Activity activity) {
         this.activity = activity;
         context = activity.getApplicationContext();
+    }
+
+    public CsvUtil() {
+
     }
 
     /**
@@ -35,9 +43,10 @@ public class CsvUtil {
      * @param csvPath
      * @return
      */
-    public ArrayList<String[]> fetch_csv(String csvPath) {
+    public ArrayList<GeoHelper.Pt> fetch_csv(String csvPath) {
         InputStreamReader is;
-        ArrayList<long[]> get_x_y = new ArrayList<>();
+        ArrayList<GeoHelper.Pt> get_x_y = new ArrayList<>();
+        ArrayList<GeoHelper.Pt> result = new ArrayList<>();
         try {
             is = new InputStreamReader(context.getAssets().open(csvPath));
             BufferedReader reader = new BufferedReader(is);
@@ -47,32 +56,37 @@ public class CsvUtil {
                 StringTokenizer st = new StringTokenizer(line, "|");
                 while (st.hasMoreTokens()) {
                     String str = st.nextToken();
-                    //getStr = str.split(",");
                     getStr = StringUtils.split(str,",");
-                    lists.add(getStr);
+                    getStr2 = java.util.Arrays.copyOf(getStr,2);
+                    lists.add(getStr2);
                 }
             }
             if (lists != null) {
                 for (int i = 0; i < lists.size(); i++) {
+                    double x = 0;
+                    double y = 0;
+                    pt = new GeoHelper.Pt();
                     for (int j = 0; j < 2; j++) {
-                        //get_x_y.get(i)[j] = Long.parseLong(lists.get(i)[j]);
-                        //System.out.println(get_x_y.get(i)[j]);
+                        x = Double.parseDouble(lists.get(i)[0]);
+                        y = Double.parseDouble(lists.get(i)[1]);
                     }
+                    pt.x = x;
+                    pt.y = y;
+                    get_x_y.add(pt);
                 }
             }
-            //get_x_y.get(0)[0] = 0;
-            //get_x_y.get(0)[1] = 0;
-            /*if (get_x_y!=null){
-                for (int i =0;i<get_x_y.size();i++){
-                    for (int j = 0;j<2;j++){
+            for (int ii =0;ii<get_x_y.size();ii++){
+                pt = new GeoHelper.Pt();
+                pt = geoHelper.WGS84ToENU(get_x_y.get(ii).x,get_x_y.get(ii).y,0);
+                //pt = geoHelper.Enu_FromWGS84(get_x_y.get(ii).x,get_x_y.get(ii).y,6371393);
+                result.add(pt);
+            }
 
-                    }
-                }
-            }*/
+
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return lists;
+        return result;
     }
 
     /**
@@ -100,4 +114,12 @@ public class CsvUtil {
 
         return get_x_y;
     }
+
+    public static void main(String[] args) {
+        CsvUtil c = new CsvUtil();
+        System.out.println(c.lists.size());
+    }
+    /**
+     * 写csv文件
+     */
 }

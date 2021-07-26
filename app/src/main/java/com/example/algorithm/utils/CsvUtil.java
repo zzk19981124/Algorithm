@@ -3,11 +3,16 @@ package com.example.algorithm.utils;
 import android.app.Activity;
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+
 import com.example.algorithm.Helper.GeoHelper;
 
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Array;
@@ -114,12 +119,4 @@ public class CsvUtil {
 
         return get_x_y;
     }
-
-    public static void main(String[] args) {
-        CsvUtil c = new CsvUtil();
-        System.out.println(c.lists.size());
-    }
-    /**
-     * 写csv文件
-     */
 }

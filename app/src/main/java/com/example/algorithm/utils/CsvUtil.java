@@ -26,7 +26,6 @@ import java.util.StringTokenizer;
  * @date 2021/7/21
  */
 public class CsvUtil {
-    private Activity activity;
     private Context context;
     private ArrayList<String[]> lists = new ArrayList<String[]>();
     private String getStr[] = new String[2];
@@ -34,14 +33,9 @@ public class CsvUtil {
     private String[] getStr2;
     private GeoHelper geoHelper = new GeoHelper();
     public CsvUtil(Activity activity) {
-        this.activity = activity;
         context = activity.getApplicationContext();
     }
-
-    public CsvUtil() {
-
-    }
-
+    public CsvUtil() { }
     /**
      * 分割csv文件
      *

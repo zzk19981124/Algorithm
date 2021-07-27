@@ -9,7 +9,12 @@
         android:layout_height="wrap_content"/>
     <Button
         android:id="@+id/btn_create_db"
-        android:text="生成txt文件"
+        android:text="采集"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
+    <TextView
+        android:id="@+id/reducedData"
+
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 </LinearLayout>

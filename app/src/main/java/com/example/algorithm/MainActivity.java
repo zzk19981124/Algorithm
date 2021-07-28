@@ -35,15 +35,16 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final int PERMISSION_REQUEST = 1;
-    private Button getPermissionBtn,createDbBtn;
+    private Button kBtnData,createDbBtn;
     private ArrayList<GeoHelper.Pt> csvLists = new ArrayList<>();
     private CsvUtil csvUtil;
-    private GeoHelper geoHelper = new GeoHelper();
-    private String filename = "reducedData.txt";
+    //private String filename = "reducedData.txt";
     private TextView showData;
     //private String filepath = Environment.getExternalStorageDirectory().getPath() + File.separator + "Test"  + File.separator;
     private List<String> mPermissionList = new ArrayList<>();
     ArrayList<GeoHelper.Pt> get = new ArrayList<>();
+    private ArrayList<GeoHelper.Pt> csvList1 = new ArrayList<>();
+    private ArrayList<GeoHelper.Pt> csvList2 = new ArrayList<>();
     private String[] permissions={Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.MOUNT_FORMAT_FILESYSTEMS};
     @Override
@@ -58,22 +59,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initBind();
         //mDB = new MyDBOpenHelper(this,"reducedData.db",null,1);
 
-        csvLists = csvUtil.fetch_csv("convert.csv");
+       // csvLists = csvUtil.fetch_csv("convert.csv");
         System.out.println("------------csv有"+csvLists.size()+"组数据----------------");
 
-        get = LTTB.getLTTB(csvLists,500);
+        //get = LTTB.getLTTB(csvLists,500);
         System.out.println("------------csv有"+get.size()+"组数据----------------");
     }
 
     private void initBind() {
-        getPermissionBtn = findViewById(R.id.btn_create_db);
+        kBtnData = findViewById(R.id.btn_create_db);
         //getPermissionBtn.setSingleLine(false);
         createDbBtn = findViewById(R.id.btn_getPermission);
-        createDbBtn.setVisibility(View.GONE);
+        //createDbBtn.setVisibility(View.GONE);
         showData = findViewById(R.id.reducedData);
         showData.setMovementMethod(ScrollingMovementMethod.getInstance());
-        int _sdkLecel = Build.VERSION.SDK_INT;
-        if (_sdkLecel>=11){
+        int _sdkLevel = Build.VERSION.SDK_INT;
+        if (_sdkLevel>=11){
             showData.setTextIsSelectable(true);
         }else{
             showData.setFocusableInTouchMode(true);
@@ -86,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //检查动态权限
         //mPermissionHelper = new PermissionHelper(this,MY_PERMISSION_REQUEST_CODE);
         csvUtil = new CsvUtil(this);
-        getPermissionBtn.setOnClickListener(this);
+        kBtnData.setOnClickListener(this);
         createDbBtn.setOnClickListener(this);
     }
 
@@ -105,8 +106,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 showData.setText(sb);
                 break;
             case R.id.btn_getPermission:
-                Message msg1 = new Message();
-                msg1.what = 1;
+                /*Message msg1 = new Message();
+                msg1.what = 1;*/
+                csvList1 = csvUtil.fetch_csv2("k.csv");
+                System.out.println("k.csv---------->"+csvList1.size());
+                csvList2 = LTTB.getLTTB(csvList1,50);
+                StringBuilder sb1 = new StringBuilder();
+                for (int i = 0;i<csvList2.size();i++){
+                    String s1 = String.valueOf(csvList2.get(i).x);
+                    String s2 = String.valueOf(csvList2.get(i).y);
+                    String s3 = String.valueOf(csvList2.get(i).z);
+                    String ss  = s1+","+s2+","+s3+"\n";
+                    sb1.append(ss);
+                }
+                showData.setText(sb1);
                 break;
         }
     }

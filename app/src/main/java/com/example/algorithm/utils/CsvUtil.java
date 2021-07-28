@@ -26,7 +26,7 @@ import java.util.StringTokenizer;
  * @date 2021/7/21
  */
 public class CsvUtil {
-    private Context context;
+    private  Context context;
     private ArrayList<String[]> lists = new ArrayList<String[]>();
     private String getStr[] = new String[2];
     private GeoHelper.Pt pt;
@@ -42,7 +42,7 @@ public class CsvUtil {
      * @param csvPath
      * @return
      */
-    public ArrayList<GeoHelper.Pt> fetch_csv(String csvPath) {
+    public  ArrayList<GeoHelper.Pt> fetch_csv(String csvPath) {
         InputStreamReader is;
         ArrayList<GeoHelper.Pt> get_x_y = new ArrayList<>();
         ArrayList<GeoHelper.Pt> result = new ArrayList<>();
@@ -87,7 +87,57 @@ public class CsvUtil {
         }
         return result;
     }
+    public ArrayList<GeoHelper.Pt> fetch_csv2(String csvPath) {
+        InputStreamReader is;
+        ArrayList<GeoHelper.Pt> get_x_y = new ArrayList<>();
+        ArrayList<GeoHelper.Pt> result = new ArrayList<>();
+        String[] getstr = new String[3];
+        String[] getstr2;
+        ArrayList<String[]> list = new ArrayList<String[]>();
+        try {
+            is = new InputStreamReader(context.getAssets().open(csvPath));
+            BufferedReader reader = new BufferedReader(is);
+            reader.readLine();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                StringTokenizer st = new StringTokenizer(line, "|");
+                while (st.hasMoreTokens()) {
+                    String str = st.nextToken();
+                    getstr = StringUtils.split(str,",");
+                    getstr2 = java.util.Arrays.copyOf(getstr,3);
+                    list.add(getstr2);
+                }
+            }
+            if (list != null) {
+                for (int i = 0; i < list.size(); i++) {
+                    double x = 0;
+                    double y = 0;
+                    double z = 0;
+                    pt = new GeoHelper.Pt();
+                    for (int j = 0; j < 2; j++) {
+                        x = Double.parseDouble(list.get(i)[0]);
+                        y = Double.parseDouble(list.get(i)[1]);
+                        z = Double.parseDouble(list.get(i)[2]);
+                    }
+                    pt.x = x;
+                    pt.y = y;
+                    pt.z = z;
+                    get_x_y.add(pt);
+                }
+            }
+            for (int ii =0;ii<get_x_y.size();ii++){
+                pt = new GeoHelper.Pt();
+                pt = geoHelper.WGS84ToENU(get_x_y.get(ii).x,get_x_y.get(ii).y,get_x_y.get(ii).z);
+                //pt = geoHelper.Enu_FromWGS84(get_x_y.get(ii).x,get_x_y.get(ii).y,6371393);
+                result.add(pt);
+            }
 
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
     /**
      * 将经纬度坐标转换成平面直角坐标系
      * 经度是x，纬度是y

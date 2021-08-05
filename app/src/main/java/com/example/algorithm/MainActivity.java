@@ -108,9 +108,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_getPermission:
                 /*Message msg1 = new Message();
                 msg1.what = 1;*/
-                csvList1 = csvUtil.fetch_csv2("k.csv");
-                System.out.println("k.csv---------->"+csvList1.size());
-                csvList2 = LTTB.getLTTB(csvList1,50);
+                csvList1 = csvUtil.fetch_csv2("1.csv");
+                System.out.println("1.csv---------->"+csvList1.size());
+                csvList2 = LTTB.getLTTB(csvList1,150);
                 StringBuilder sb1 = new StringBuilder();
                 for (int i = 0;i<csvList2.size();i++){
                     String s1 = String.valueOf(csvList2.get(i).x);

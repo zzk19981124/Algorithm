@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -26,19 +27,82 @@ import java.util.StringTokenizer;
  * @date 2021/7/21
  */
 public class CsvUtil {
-    private  Context context;
-    private ArrayList<String[]> lists = new ArrayList<String[]>();
-    private String getStr[] = new String[2];
-    private GeoHelper.Pt pt;
-    private String[] getStr2;
-    private GeoHelper geoHelper = new GeoHelper();
+    private static   Context context;
+    private static ArrayList<String[]> lists = new ArrayList<String[]>();
+    private static String getStr[] = new String[2];
+    private static GeoHelper.Pt pt;
+    private static String[] getStr2;
+    private static GeoHelper geoHelper = new GeoHelper();
     public CsvUtil(Activity activity) {
         context = activity.getApplicationContext();
     }
     public CsvUtil() { }
+
+    /**
+     * 处理手机文件夹中的csv文件
+     * @param csvPath
+     * @return
+     */
+    public  static ArrayList<GeoHelper.Pt> myself_csv(String csvPath) {
+        //全部初始化
+        for (int i =0;i<getStr.length;i++){
+            getStr[i] = "";
+        }
+        for (int i =0;i<getStr2.length;i++){
+            getStr2[i] = "";
+        }
+        for (int i =0;i<lists.size();i++){
+            for (int j = 0;j<lists.get(i).length;j++){
+                lists.get(i)[j] = "";
+            }
+        }
+        InputStreamReader is;
+        ArrayList<GeoHelper.Pt> get_x_y = new ArrayList<>();
+        ArrayList<GeoHelper.Pt> result = new ArrayList<>();
+        try {
+            //照着这个修改读取文件
+            //https://blog.csdn.net/weixin_42119866/article/details/117488597?utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-3.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-3.control
+            is = new InputStreamReader(context.getAssets().open(csvPath));
+            BufferedReader reader = new BufferedReader(is);
+            reader.readLine();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                StringTokenizer st = new StringTokenizer(line, "|");
+                while (st.hasMoreTokens()) {
+                    String str = st.nextToken();
+                    getStr = StringUtils.split(str,",");
+                    getStr2 = java.util.Arrays.copyOf(getStr,2);
+                    lists.add(getStr2);
+                }
+            }
+            if (lists != null) {
+                for (int i = 0; i < lists.size(); i++) {
+                    double x = 0;
+                    double y = 0;
+                    pt = new GeoHelper.Pt();
+                    for (int j = 0; j < 2; j++) {
+                        x = Double.parseDouble(lists.get(i)[0]);
+                        y = Double.parseDouble(lists.get(i)[1]);
+                    }
+                    pt.x = x;
+                    pt.y = y;
+                    get_x_y.add(pt);
+                }
+            }
+            for (int ii =0;ii<get_x_y.size();ii++){
+                pt = new GeoHelper.Pt();
+                pt = geoHelper.WGS84ToENU(get_x_y.get(ii).x,get_x_y.get(ii).y,0);
+                //pt = geoHelper.Enu_FromWGS84(get_x_y.get(ii).x,get_x_y.get(ii).y,6371393);
+                result.add(pt);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
     /**
      * 分割csv文件
-     *
+     *  不带高度属性的
      * @param csvPath
      * @return
      */
@@ -87,7 +151,13 @@ public class CsvUtil {
         }
         return result;
     }
-    public ArrayList<GeoHelper.Pt> fetch_csv2(String csvPath) {
+
+    /**
+     * 带高度属性的
+     * @param csvPath
+     * @return
+     */
+    public static ArrayList<GeoHelper.Pt> fetch_csv2(String csvPath) {
         InputStreamReader is;
         ArrayList<GeoHelper.Pt> get_x_y = new ArrayList<>();
         ArrayList<GeoHelper.Pt> result = new ArrayList<>();

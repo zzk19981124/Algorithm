@@ -26,7 +26,6 @@ public class WriteFileUil {
                 file.getParentFile().mkdirs();
                 file.createNewFile();
             }
-
             RandomAccessFile raf = new RandomAccessFile(file,"rwd");
             raf.seek(file.length());
             raf.write(strcontent.getBytes());
@@ -42,7 +41,6 @@ public class WriteFileUil {
         try {
             file = new File(filepath+filename);
             if (!file.exists()){
-                //这儿报错
                 file.createNewFile();
             }
         } catch (Exception exception) {

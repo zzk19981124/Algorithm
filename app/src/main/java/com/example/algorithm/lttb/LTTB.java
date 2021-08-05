@@ -39,6 +39,7 @@ public class LTTB {
             //点A
             double pointAx = data.get(a).x;
             double pointAy = data.get(a).y;
+
             double maxArea = -1;
             //+1是为了排除当前点
             int rangeOffs = (int) (Math.floor((i + 0) * everyBucket) + 1);
@@ -59,9 +60,5 @@ public class LTTB {
         }
         reducedData.add(data.get(dataLength - 1));//默认添加尾节点
         return reducedData;
-    }
-
-    public static void main(String[] args) {
-
     }
 }

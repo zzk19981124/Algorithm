@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -31,29 +32,34 @@ import com.example.algorithm.Helper.GeoHelper;
 import com.example.algorithm.R;
 import com.example.algorithm.utils.CsvUtil;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class FirstActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "FirstActivity-------->";
     private TextView tvSelectFile; //打开系统的文件目录，选中文件
     private Button btnUseLTTB;   // 根据tv中选中的文件放入函数中进行解析
-    private String path;
+    private String path; //2021-8-6 现在只能打开默认路径，打不开内部存储路径
     private List<String> mPermissionList = new ArrayList<>();
-    private String[] permissions={Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE,
+    private String[] permissions = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.MOUNT_FORMAT_FILESYSTEMS};
     private static final int PERMISSION_REQUEST = 1;
     private List<GeoHelper.Pt> data = new ArrayList<>();
 
     @SuppressLint("HandlerLeak")
-    private Handler handler = new Handler(){
+    private Handler handler = new Handler() {
         @Override
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
-            String text =String.valueOf(msg.obj);
-            if (text!=null||text.equals("")){
-                btnUseLTTB.setText(msg.what+"");
-            }else
+            String text = String.valueOf(msg.obj);
+            if (text != null || text.equals("")) {
+                btnUseLTTB.setText(msg.what + "");
+            } else
                 btnUseLTTB.setText(text);
         }
     };
@@ -87,7 +93,7 @@ public class FirstActivity extends AppCompatActivity implements View.OnClickList
                 startActivityForResult(intent, 1);
                 break;
             case R.id.btn_LTTB:
-                if (path==null){
+                if (path == null) {
                     Toast.makeText(this, "请先选择数据文件！", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -100,24 +106,22 @@ public class FirstActivity extends AppCompatActivity implements View.OnClickList
     }
 
 
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK) {
+        if (resultCode == Activity.RESULT_OK) {//是否选择，没选择就不会继续
             Uri uri = data.getData();
             if ("file".equalsIgnoreCase(uri.getScheme())) {
                 path = uri.getPath();
-                tvSelectFile.setText(path);
                 Toast.makeText(this, path, Toast.LENGTH_SHORT).show();
                 return;
             }
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {//4.4以后
-                path = getPath(this, uri);
+                path = getPath(this, uri);    //在这获得了path
             } else {//4.4以下系统调用该方法
                 path = getRealPathFromURI(uri);
             }
-            Log.d(TAG, "绝对路径： "+path);
+            Log.d(TAG, "绝对路径： " + path);
             tvSelectFile.setText(getFileName(path));//获取文件名
         }
     }
@@ -127,7 +131,6 @@ public class FirstActivity extends AppCompatActivity implements View.OnClickList
         String[] proj = {MediaStore.Images.Media.DATA};
         Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
         if (null != cursor && cursor.moveToFirst()) {
-            ;
             int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
             res = cursor.getString(column_index);
             cursor.close();
@@ -144,7 +147,8 @@ public class FirstActivity extends AppCompatActivity implements View.OnClickList
      */
     @SuppressLint("NewApi")
     public String getPath(final Context context, final Uri uri) {
-        final boolean isKitKat = Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT;
+        if (context == null || uri == null) return null;
+        final boolean isKitKat = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT;
         if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
             //ExternalStorageProvider  外部存储提供者
             if (isExternalStorageDocument(uri)) {
@@ -220,7 +224,6 @@ public class FirstActivity extends AppCompatActivity implements View.OnClickList
      */
     public boolean isExternalStorageDocument(Uri uri) {
         return "com.android.externalstorage.documents".equals(uri.getAuthority());
-        //return "com.android.providers.downloads.documents".equals(uri.getAuthority());
     }
 
     /**
@@ -236,33 +239,35 @@ public class FirstActivity extends AppCompatActivity implements View.OnClickList
     public boolean isMediaDocument(Uri uri) {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
-    private void checkPermission(){
+
+    private void checkPermission() {
         mPermissionList.clear();
-        for (int i =0;i<permissions.length;i++){
-            if (ContextCompat.checkSelfPermission(this,permissions[i])!= PackageManager.PERMISSION_GRANTED){
+        for (int i = 0; i < permissions.length; i++) {
+            if (ContextCompat.checkSelfPermission(this, permissions[i]) != PackageManager.PERMISSION_GRANTED) {
                 mPermissionList.add(permissions[i]);
             }
         }
         /*
          * 判断是否为空
          * */
-        if (mPermissionList.isEmpty()){
+        if (mPermissionList.isEmpty()) {
 
-        }else{
+        } else {
             //请求权限的方法
             String[] permissionss = mPermissionList.toArray(new String[mPermissionList.size()]);
-            ActivityCompat.requestPermissions(this,permissionss,PERMISSION_REQUEST);
+            ActivityCompat.requestPermissions(this, permissionss, PERMISSION_REQUEST);
         }
     }
+
     /**
      * 切割字符串，获取到最后的文件名
      */
-    private String getFileName(String path){
+    private String getFileName(String path) {
         String result = "";
-        if (path!=null){
+        if (path != null) {
             String[] split = path.split("/");
-            if (split!=null&& split.length!=0){
-                for (String string:split){
+            if (split != null && split.length != 0) {
+                for (String string : split) {
                     result = string;
                 }
             }
@@ -278,7 +283,7 @@ public class FirstActivity extends AppCompatActivity implements View.OnClickList
         new Thread(new Runnable() {
             @Override
             public void run() {
-                for (int i =3;i>-1;i--){
+                for (int i = 3; i > -1; i--) {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
@@ -288,8 +293,31 @@ public class FirstActivity extends AppCompatActivity implements View.OnClickList
                 }
                 //采集操作尝试
                 data = CsvUtil.fetch_csv2(path);
-                Log.d(TAG, "---------------> 数据集的长度："+data.size());
+                Log.d(TAG, "---------------> 数据集的长度：" + data.size());
             }
         }).start();
+    }
+
+    /**
+     * 读取csv文件
+     */
+    private ArrayList readCsv() {
+        ArrayList readerArr = new ArrayList<>();
+        if (path == null || path.equals("")) return null;
+        File file = new File(path);
+        FileInputStream fileInputStream;
+        Scanner in;
+        try {
+            fileInputStream = new FileInputStream(file);
+            in = new Scanner(fileInputStream, "UTF-8");
+            in.nextLine();
+            while (in.hasNextLine()) {
+                String[] lines = in.nextLine().split(",");
+                readerArr.add(lines);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return readerArr;
     }
 }

@@ -117,7 +117,7 @@ public class FirstActivity extends AppCompatActivity implements View.OnClickList
                 return;
             }
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {//4.4以后
-                path = getPath(this, uri);    //在这获得了path
+                path = getPath(this, uri);    //经debug，在这获得了path
             } else {//4.4以下系统调用该方法
                 path = getRealPathFromURI(uri);
             }

@@ -45,8 +45,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ArrayList<GeoHelper.Pt> get = new ArrayList<>();
     private ArrayList<GeoHelper.Pt> csvList1 = new ArrayList<>();
     private ArrayList<GeoHelper.Pt> csvList2 = new ArrayList<>();
-    private String[] permissions={Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.MOUNT_FORMAT_FILESYSTEMS};
+    private String[] permissions={Manifest.permission.INTERNET,
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION};
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         checkPermission();

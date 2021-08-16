@@ -33,6 +33,7 @@ import com.hjq.permissions.Permission;
 import com.hjq.permissions.XXPermissions;
 
 import java.io.File;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,14 +49,54 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ArrayList<GeoHelper.Pt> get = new ArrayList<>();
     private ArrayList<GeoHelper.Pt> beforeCSV = new ArrayList<>();
     private ArrayList<GeoHelper.Pt> afterCSV = new ArrayList<>();
+    private static final double lonMi = 0.00001141; //经度每移动1米度数变化
+    private static final double latMi = 0.00000899;//维度每移动1米度数变化
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         checkPermission();
         super.onCreate(savedInstanceState);
+        //android11 新特性，需要强制启用
+        //XXPermissions.setScopedStorage(true);
         setContentView(R.layout.activity_main);
         initBind();//初始化控件
+
+        //平移曲线
+        translationCurve(afterCSV, 1, 10);
     }
+
+    //实现平移曲线的函数 , 参数：数据集、方向
+    private ArrayList<GeoHelper.Pt> translationCurve(ArrayList<GeoHelper.Pt> lineCSV,
+                                                     int direction, double distance) {
+        ArrayList<GeoHelper.Pt> originalData = new ArrayList<>();
+        originalData = CsvUtil.getJw();
+        switch (direction) {
+            case 1://北,纬度+
+                for (GeoHelper.Pt data : originalData) {
+                    data.x = data.x + distance * latMi;
+                }
+                break;
+            case 2://南，纬度-
+                for (GeoHelper.Pt data : originalData) {
+                    data.x = data.x - distance * latMi;
+                }
+                break;
+            case 3://西，经度-，默认东经
+                for (GeoHelper.Pt data : originalData) {
+                    data.y = data.x - distance * lonMi;
+                }
+                break;
+            case 4://东，经度+，默认东经
+                for (GeoHelper.Pt data : originalData) {
+                    data.y = data.x + distance * lonMi;
+                }
+                break;
+            default:
+                break;
+        }
+        return originalData;
+    }
+
     //初始化控件以及设置文本框可复制粘贴
     private void initBind() {
         mainLayout = findViewById(R.id.main_layout);
@@ -92,19 +133,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     //将csv文件解析到文本框当中
-    private StringBuilder fromCSV(){
+    private StringBuilder fromCSV() {
         beforeCSV = csvUtil.fetch_csv2("1.csv");
-        Log.i(TAG, "fromCSV: "+beforeCSV.size());
-        if (beforeCSV.size()==0) return null;
-        afterCSV = LTTB.getLTTB(beforeCSV,beforeCSV.size()/10);//使用过滤算法，点数降为1/3
-        Log.i(TAG, "fromCSV: "+afterCSV.size());
+        Log.i(TAG, "fromCSV: " + beforeCSV.size());
+        if (beforeCSV.size() == 0) return null;
+        afterCSV = LTTB.getLTTB(beforeCSV, beforeCSV.size() / 10);//使用过滤算法，点数降为1/3
+        Log.i(TAG, "fromCSV: " + afterCSV.size());
         StringBuilder sb = new StringBuilder();
-        for (GeoHelper.Pt data:afterCSV){
-            String string = String.valueOf(data.x).concat(","+String.valueOf(data.y).concat(","+String.valueOf(data.z))+"\n");
+        for (GeoHelper.Pt data : afterCSV) {
+            String string = String.valueOf(data.x).concat("," + String.valueOf(data.y).concat("," + String.valueOf(data.z)) + "\n");
             sb.append(string);
         }
         return sb;
     }
+
     //检查权限，如果没有则跳转到权限申请页面
     private void checkPermission() {
         List<String> mPermissionList = new ArrayList<>();

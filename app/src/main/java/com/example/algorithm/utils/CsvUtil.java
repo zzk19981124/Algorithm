@@ -150,7 +150,7 @@ public class CsvUtil {
     }
 
     /**
-     * 读取带高度属性列的csv文件
+     * 读取带高度属性列的csv文件,转换局部坐标系
      *
      * @param csvPath
      * @return
@@ -193,6 +193,7 @@ public class CsvUtil {
                     get_x_y.add(pt);
                 }
             }
+            jw = get_x_y;
             for (int ii = 0; ii < get_x_y.size(); ii++) {
                 pt = new GeoHelper.Pt();
                 pt = geoHelper.WGS84ToENU(get_x_y.get(ii).x, get_x_y.get(ii).y, get_x_y.get(ii).z);
@@ -205,5 +206,14 @@ public class CsvUtil {
             e.printStackTrace();
         }
         return result;
+    }
+    private static ArrayList<GeoHelper.Pt> jw = new ArrayList<>();//原始的经纬度坐标
+
+    public static ArrayList<GeoHelper.Pt> getJw() {
+        return jw;
+    }
+
+    public void setJw(ArrayList<GeoHelper.Pt> jw) {
+        this.jw = jw;
     }
 }

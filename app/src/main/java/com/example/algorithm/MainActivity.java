@@ -40,7 +40,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final int PERMISSION_REQUEST = 1;
     private static final String TAG = "MainActivity-------->";
-    private Button kBtnData, createDbBtn;
+    private Button getDataBtn, translationBtn;
     private ScrollView mainLayout;
     private ArrayList<GeoHelper.Pt> csvLists = new ArrayList<>();
     private CsvUtil csvUtil;
@@ -62,10 +62,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initBind();//初始化控件
 
         //平移曲线
-        translationCurve(afterCSV, 1, 10);
+        //translationCurve(afterCSV, 1, 10);
+        //平移曲线，使用局部坐标系
+        //translationNEU(afterCSV, 1, 10);
     }
 
-    //实现平移曲线的函数 , 参数：数据集、方向
+    //平移曲线，使用局部坐标系,enu东北天
+    private ArrayList<GeoHelper.Pt> translationNEU(ArrayList<GeoHelper.Pt> lineCSV,
+                                                   int direction, double distance) {
+        ArrayList<GeoHelper.Pt> originalData = new ArrayList<>();
+        originalData = lineCSV;
+        switch (direction){
+            case 1://北
+                for (GeoHelper.Pt data : originalData) {
+                    data.y+=10;
+                }
+                break;
+            case 2://南
+                for (GeoHelper.Pt data : originalData) {
+                    data.y-=10;
+                }
+                break;
+            case 3://西
+                for (GeoHelper.Pt data : originalData) {
+                    data.x-=10;
+                }
+                break;
+            case 4://东
+                for (GeoHelper.Pt data : originalData) {
+                    data.x+=10;
+                }
+                break;
+            default:
+                break;
+        }
+        return originalData;
+    }
+
+    //实现平移曲线的函数 , 参数：数据集、方向、平移的米数
     private ArrayList<GeoHelper.Pt> translationCurve(ArrayList<GeoHelper.Pt> lineCSV,
                                                      int direction, double distance) {
         ArrayList<GeoHelper.Pt> originalData = new ArrayList<>();
@@ -100,9 +134,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //初始化控件以及设置文本框可复制粘贴
     private void initBind() {
         mainLayout = findViewById(R.id.main_layout);
-        kBtnData = findViewById(R.id.btn_create_db);
-        createDbBtn = findViewById(R.id.btn_getPermission);
-        kBtnData.setVisibility(View.GONE);//第二个按钮设置为不可见
+        translationBtn = findViewById(R.id.btn_translation);
+        getDataBtn = findViewById(R.id.btn_get_data);
+        //kBtnData.setVisibility(View.GONE);//第二个按钮设置为不可见
         showData = findViewById(R.id.reducedData);
         showData.setMovementMethod(ScrollingMovementMethod.getInstance());
         int _sdkLevel = Build.VERSION.SDK_INT;
@@ -117,17 +151,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             showData.setText(showData.getText(), TextView.BufferType.SPANNABLE);
         }
         csvUtil = new CsvUtil(this);
-        kBtnData.setOnClickListener(this);
-        createDbBtn.setOnClickListener(this);
+        getDataBtn.setOnClickListener(this);
+        translationBtn.setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.btn_create_db:
+            case R.id.btn_translation://向北平移10米
+                ArrayList<GeoHelper.Pt> enuData = new ArrayList<>();
+                StringBuilder sb = new StringBuilder();
+                enuData = translationNEU(afterCSV,1,10);
+                for (GeoHelper.Pt data : enuData) {
+                    String string = String.valueOf(data.x).concat("," + String.valueOf(data.y).concat("," + String.valueOf(data.z)) + "\n");
+                    sb.append(string);
+                }
+                showData.setText(sb);
                 break;
-            case R.id.btn_getPermission:
+            case R.id.btn_get_data:
                 showData.setText(fromCSV());//从csv文件读取
+                break;
+            default:
                 break;
         }
     }

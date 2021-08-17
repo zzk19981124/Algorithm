@@ -123,6 +123,7 @@ public class FirstActivity extends AppCompatActivity implements View.OnClickList
             }
             Log.d(TAG, "绝对路径： " + path);
             tvSelectFile.setText(getFileName(path));//获取文件名
+
         }
     }
 

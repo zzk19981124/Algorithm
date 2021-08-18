@@ -42,7 +42,7 @@ import java.util.Scanner;
 
 public class FirstActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "FirstActivity-------->";
-    private TextView tvSelectFile; //打开系统的文件目录，选中文件
+    private TextView tvSelectFile; //打开系统的文件目录，选中文件             1111
     private Button btnUseLTTB;   // 根据tv中选中的文件放入函数中进行解析
     private String path; //2021-8-6 现在只能打开默认路径，打不开内部存储路径
     private List<String> mPermissionList = new ArrayList<>();

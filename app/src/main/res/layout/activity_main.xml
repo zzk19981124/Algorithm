@@ -20,6 +20,11 @@
             android:text="平移"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
+        <Button
+            android:id="@+id/btn_pingyi_c"
+            android:text="按曲率平移"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
             <!--<EditText
                 android:id="@+id/et_distance"
                 android:hint="请输入移动的"

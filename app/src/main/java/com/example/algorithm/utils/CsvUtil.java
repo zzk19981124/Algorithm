@@ -96,13 +96,26 @@ public class CsvUtil {
     }
 
     /**
+     * 当csv文件中的数据  已经是局部坐标系时使用
+     * 读取csv，放入集合中
+     *
+     * @param csvPath
+     * @return
+     */
+    public static ArrayList<GeoHelper.Pt> cutDataNoToENU(String csvPath) {
+        ArrayList<GeoHelper.Pt> result = new ArrayList<>();
+
+        return result;
+    }
+
+    /**
      * 分割csv文件
      * 不带高度属性的
      *
      * @param csvPath
      * @return
      */
-    public ArrayList<GeoHelper.Pt>  fetch_csv(String csvPath) {
+    public ArrayList<GeoHelper.Pt> fetch_csv(String csvPath) {
         InputStreamReader is;
         ArrayList<GeoHelper.Pt> get_x_y = new ArrayList<>();
         ArrayList<GeoHelper.Pt> result = new ArrayList<>();
@@ -209,6 +222,7 @@ public class CsvUtil {
         }
         return result;
     }
+
     private static ArrayList<GeoHelper.Pt> jw = new ArrayList<>();//原始的经纬度坐标
 
     public static ArrayList<GeoHelper.Pt> getJw() {
@@ -218,28 +232,28 @@ public class CsvUtil {
     public void setJw(ArrayList<GeoHelper.Pt> jw) {
         this.jw = jw;
     }
+
     /**
      * 计算曲率
-     *
+     * <p>
      * function [kappa,norm_k] = PJcurvature(x,y)
-     *     x = reshape(x,3,1);
-     *     y = reshape(y,3,1);
-     *     t_a = norm([x(2)-x(1),y(2)-y(1)]);
-     *     t_b = norm([x(3)-x(2),y(3)-y(2)]);
-     *
-     *     M =[[1, -t_a, t_a^2];
-     *         [1, 0,    0    ];
-     *         [1,  t_b, t_b^2]];
-     *
-     *     a = M\x
-     *     b = M\y
-     *
-     *     kappa  = 2.*(a(3)*b(2)-b(3)*a(2)) / (a(2)^2.+b(2)^2.)^(1.5);
-     *     norm_k =  [b(2),-a(2)]/sqrt(a(2)^2.+b(2)^2.);
+     * x = reshape(x,3,1);
+     * y = reshape(y,3,1);
+     * t_a = norm([x(2)-x(1),y(2)-y(1)]);
+     * t_b = norm([x(3)-x(2),y(3)-y(2)]);
+     * <p>
+     * M =[[1, -t_a, t_a^2];
+     * [1, 0,    0    ];
+     * [1,  t_b, t_b^2]];
+     * <p>
+     * a = M\x
+     * b = M\y
+     * <p>
+     * kappa  = 2.*(a(3)*b(2)-b(3)*a(2)) / (a(2)^2.+b(2)^2.)^(1.5);
+     * norm_k =  [b(2),-a(2)]/sqrt(a(2)^2.+b(2)^2.);
      * end
-     *
-     * */
-    private void countqulv(double x,double y){
+     */
+    private void countqulv(double x, double y) {
         //x =fffffffffffffffffffffffffffffffffffffffff
         int xx = 1;
     }
@@ -256,13 +270,7 @@ public class CsvUtil {
 
     public static List<Double> countCurvature(ArrayList<GeoHelper.Pt> data) {
         List<Double> allCurvature = new ArrayList<>(data.size());
-        //allCurvature.add(0.0);
-       // allCurvature.set(data.size()-1,0.0);
-        //if (data.size() == 0) return allCurvature;
         int dataLength = data.size();
-        /*for (Double d: allCurvature){
-
-        }*/
         ArrayList<GeoHelper.Pt> curvedData = new ArrayList<>(dataLength);
         //计算第二个点~倒数第二个点 之间的数据
         for (int i = 1; i < dataLength - 1; i++) {
@@ -282,58 +290,58 @@ public class CsvUtil {
             double x3 = nextPoint.x;
             double y3 = nextPoint.y;
             //第一个点和第二个点之间的距离
-            double t_a = norm(x1,x2,y1,y2);
+            double t_a = norm(x1, x2, y1, y2);
             //第二个点和第三个点之间的距离
-            double t_b = norm(x2,x3,y2,y3);
+            double t_b = norm(x2, x3, y2, y3);
             // dense  是 M
-            Matrix dense = DenseMatrix.Factory.zeros(3,3);
+            Matrix dense = DenseMatrix.Factory.zeros(3, 3);
 
-            for (int j =0;j<3;j++){
-                dense.setAsDouble(1,i,0);
+            for (int j = 0; j < 3; j++) {
+                dense.setAsDouble(1, i, 0);
             }
-            for (int k = 1;k<3;k++){
-                dense.setAsDouble(0,1,k);
+            for (int k = 1; k < 3; k++) {
+                dense.setAsDouble(0, 1, k);
             }
-            dense.setAsDouble(-t_a,0,1);
-            dense.setAsDouble(t_a*t_a,0,2);
-            dense.setAsDouble(t_b,2,1);
-            dense.setAsDouble(t_b*t_b,2,2);
+            dense.setAsDouble(-t_a, 0, 1);
+            dense.setAsDouble(t_a * t_a, 0, 2);
+            dense.setAsDouble(t_b, 2, 1);
+            dense.setAsDouble(t_b * t_b, 2, 2);
 
-            Matrix x = DenseMatrix.Factory.zeros(3,1);
-            x.setAsDouble(x1,0,0);
-            x.setAsDouble(x2,1,0);
-            x.setAsDouble(x3,2,0);
+            Matrix x = DenseMatrix.Factory.zeros(3, 1);
+            x.setAsDouble(x1, 0, 0);
+            x.setAsDouble(x2, 1, 0);
+            x.setAsDouble(x3, 2, 0);
 
-            Matrix y = DenseMatrix.Factory.zeros(3,1);
-            y.setAsDouble(y1,0,0);
-            y.setAsDouble(y2,1,0);
-            y.setAsDouble(y3,2,0);
+            Matrix y = DenseMatrix.Factory.zeros(3, 1);
+            y.setAsDouble(y1, 0, 0);
+            y.setAsDouble(y2, 1, 0);
+            y.setAsDouble(y3, 2, 0);
 
             Matrix a = (dense.inv()).mtimes(x);
             Matrix b = (dense.inv()).mtimes(y);
 
-            double a1 = a.getAsDouble(0,0);
-            double a2 = a.getAsDouble(1,0);
-            double a3 = a.getAsDouble(2,0);
+            double a1 = a.getAsDouble(0, 0);
+            double a2 = a.getAsDouble(1, 0);
+            double a3 = a.getAsDouble(2, 0);
 
-            double b1 = b.getAsDouble(0,0);
-            double b2 = b.getAsDouble(1,0);
-            double b3 = b.getAsDouble(2,0);
+            double b1 = b.getAsDouble(0, 0);
+            double b2 = b.getAsDouble(1, 0);
+            double b3 = b.getAsDouble(2, 0);
             //最终曲率
-            double curvature = (2*(a3*b2-a2*b3))/((Math.pow(a2,2)+Math.pow(b2,2))*Math.sqrt((Math.pow(a2,2)+Math.pow(b2,2))));
-            allCurvature.set(i,curvature);
+            double curvature = (2 * (a3 * b2 - a2 * b3)) / ((Math.pow(a2, 2) + Math.pow(b2, 2)) * Math.sqrt((Math.pow(a2, 2) + Math.pow(b2, 2))));
+            allCurvature.set(i, curvature);
 
             //将首尾赋值他们相邻的数
-            if (i==1){
-                allCurvature.set(0,curvature);
-            }else if (i==dataLength - 2){
+            if (i == 1) {
+                allCurvature.set(0, curvature);
+            } else if (i == dataLength - 2) {
                 //allCurvature.set(dataLength - 1,curvature);
                 allCurvature.add(curvature);
             }
-           List<Double[]> list = new ArrayList<>();
+            List<Double[]> list = new ArrayList<>();
             Double[] l = new Double[2];
-            l[0] = b2/(Math.sqrt(Math.pow(a2,2)+Math.pow(b2,2)));
-            l[1] = a2/(Math.sqrt(Math.pow(a2,2)+Math.pow(b2,2)));
+            l[0] = b2 / (Math.sqrt(Math.pow(a2, 2) + Math.pow(b2, 2)));
+            l[1] = a2 / (Math.sqrt(Math.pow(a2, 2) + Math.pow(b2, 2)));
             list.add(l);
 
 
@@ -341,19 +349,22 @@ public class CsvUtil {
 
         return allCurvature;
     }
+
     /**
-     *
-     *返回曲线的每个点的矢量
+     * 返回曲线的每个点的矢量
+     * 多了一位!!!
      */
-    public static List<double[]> countNormK (ArrayList<GeoHelper.Pt> data) {
+    public static List<double[]> countNormK(ArrayList<GeoHelper.Pt> data) {
         int dataLength = data.size();
-        List<double[]> list = new ArrayList<>(dataLength);
-        double dd[] = {0.0,0.0};
-        for (int i =0;i<dataLength;i++){
+        List<double[]> list = new ArrayList<>();
+        double dd[] = {0.0, 0.0};
+        for (int i = 0; i < dataLength; i++) {
+            //list.set(i,dd);
+            //list.get(i) = dd;
             list.add(dd);
         }
 
-        ArrayList<GeoHelper.Pt> curvedData = new ArrayList<>(dataLength);
+        //ArrayList<GeoHelper.Pt> curvedData = new ArrayList<>(dataLength);
         //计算第二个点~倒数第二个点 之间的数据
         for (int i = 1; i < dataLength - 1; i++) {
 
@@ -373,66 +384,147 @@ public class CsvUtil {
             double x3 = nextPoint.x;
             double y3 = nextPoint.y;
             //第一个点和第二个点之间的距离
-            double t_a = norm(x1,x2,y1,y2);
+            double t_a = norm(x1, x2, y1, y2);
             //第二个点和第三个点之间的距离
-            double t_b = norm(x2,x3,y2,y3);
+            double t_b = norm(x2, x3, y2, y3);
             // dense  是 M
-            Matrix dense = DenseMatrix.Factory.zeros(3,3);
+            Matrix dense = DenseMatrix.Factory.zeros(3, 3);
 
-            for (int j =0;j<3;j++){
-                dense.setAsDouble(1,j,0);
+            for (int j = 0; j < 3; j++) {
+                dense.setAsDouble(1, j, 0);
             }
-            for (int k = 1;k<3;k++){
-                dense.setAsDouble(0,1,k);
+            for (int k = 1; k < 3; k++) {
+                dense.setAsDouble(0, 1, k);
             }
-            dense.setAsDouble(-t_a,0,1);
-            dense.setAsDouble(t_a*t_a,0,2);
-            dense.setAsDouble(t_b,2,1);
-            dense.setAsDouble(t_b*t_b,2,2);
+            dense.setAsDouble(-t_a, 0, 1);
+            dense.setAsDouble(t_a * t_a, 0, 2);
+            dense.setAsDouble(t_b, 2, 1);
+            dense.setAsDouble(t_b * t_b, 2, 2);
 
             //System.out.println(dense);
 
-            Matrix x = DenseMatrix.Factory.zeros(3,1);
-            x.setAsDouble(x1,0,0);
-            x.setAsDouble(x2,1,0);
-            x.setAsDouble(x3,2,0);
+            Matrix x = DenseMatrix.Factory.zeros(3, 1);
+            x.setAsDouble(x1, 0, 0);
+            x.setAsDouble(x2, 1, 0);
+            x.setAsDouble(x3, 2, 0);
 
-            Matrix y = DenseMatrix.Factory.zeros(3,1);
-            y.setAsDouble(y1,0,0);
-            y.setAsDouble(y2,1,0);
-            y.setAsDouble(y3,2,0);
+            Matrix y = DenseMatrix.Factory.zeros(3, 1);
+            y.setAsDouble(y1, 0, 0);
+            y.setAsDouble(y2, 1, 0);
+            y.setAsDouble(y3, 2, 0);
 
             Matrix a = (dense.inv()).mtimes(x);
             Matrix b = (dense.inv()).mtimes(y);
 
-            double a1 = a.getAsDouble(0,0);
-            double a2 = a.getAsDouble(1,0);
-            double a3 = a.getAsDouble(2,0);
+            double a1 = a.getAsDouble(0, 0);
+            double a2 = a.getAsDouble(1, 0);
+            double a3 = a.getAsDouble(2, 0);
 
-            double b1 = b.getAsDouble(0,0);
-            double b2 = b.getAsDouble(1,0);
-            double b3 = b.getAsDouble(2,0);
+            double b1 = b.getAsDouble(0, 0);
+            double b2 = b.getAsDouble(1, 0);
+            double b3 = b.getAsDouble(2, 0);
 
             double[] l = new double[2];
-            l[0] = b2/(Math.sqrt(Math.pow(a2,2)+Math.pow(b2,2)));
-            l[1] = a2/(Math.sqrt(Math.pow(a2,2)+Math.pow(b2,2)));
-            list.set(i,l);
+            l[0] = b2 / (Math.sqrt(Math.pow(a2, 2) + Math.pow(b2, 2)));
+            l[1] = a2 / (Math.sqrt(Math.pow(a2, 2) + Math.pow(b2, 2)));
+            list.set(i, l);
 
-            if (i==1){
-                list.set(0,l);
-            }else if (i==dataLength-2){
-                //list.set(dataLength-1,l);
-                list.add(l);
+            if (i == 1) {
+                list.set(0, l);
+            } else if (i == dataLength - 2) {
+                list.set(dataLength - 1, l);
+                //list.add(l);
             }
         }
         return list;
     }
 
     /**
+     * 计算速度矢量，i+1的点 - i的点
+     *
+     * @param csvData
+     */
+    public static List<double[]> countSpeedVector(ArrayList<GeoHelper.Pt> csvData) {
+        int dataLength = csvData.size();
+        List<double[]> cutData = threeToTwo(csvData);
+        for (int i = 0; i < dataLength - 1; i++) {
+            double[] thisPoint = cutData.get(i);
+            double[] nextPoint = cutData.get(i + 1);
+
+            double[] vector = new double[2];
+            vector[0] = nextPoint[0] - thisPoint[0];
+            vector[1] = nextPoint[1] - thisPoint[1];
+            cutData.set(i, vector);
+            if (i == dataLength - 2) {
+                cutData.set(dataLength - 1, vector);
+            }
+        }
+
+        return cutData;
+    }
+
+    /**
+     * 计算向量积，也就是两个矢量的差乘
+     * 注意传进来的是两列，在最后面要再加一列0
+     * a = [a1,a2,a3]
+     * b = [b1,b2,b3]
+     * a^b = [a2b3 - a3b2 , a3b1 - a1b3 , a1b2 - a2b1]
+     * a, 是速度矢量
+     * b, 是曲率矢量
+     *
+     * @param a
+     * @param b
+     */
+    public static double[] countVectorProduct(List<double[]> a, List<double[]> b) {
+        double[] result = new double[a.size()];
+        for (int i = 0; i < a.size(); i++) {
+            double a1 = a.get(i)[0];
+            double a2 = a.get(i)[1];
+            double b1 = b.get(i)[0];
+            double b2 = b.get(i)[1];
+            result[i] = a1 * b2 - a2 * b1;
+        }
+        return result;
+        /*int dataLength = a.size();
+        List<double[]> list_a = new ArrayList<>(dataLength);
+        List<double[]> list_b = new ArrayList<>(dataLength);
+        for (int i =0;i<dataLength;i++){
+            double[] l  = new double[3];
+            double[] ll = new double[3];
+            l[0] = a.get(i)[0];
+            l[1] = a.get(i)[1];
+            l[2] = 0;
+            list_a.add(l);
+            ll[0] = b.get(i)[0];
+            ll[1] = b.get(i)[1];
+            ll[2] = 0;
+            list_b.add(ll);
+        }*/
+    }
+
+
+    /**
+     * 如果数据是三列，取前两列，放入List<double[]> 中
+     *
+     * @param data
+     */
+    public static List<double[]> threeToTwo(ArrayList<GeoHelper.Pt> data) {
+        int dataLength = data.size();
+        List<double[]> list = new ArrayList<>(dataLength);
+        for (int i = 0; i < dataLength; i++) {
+            double[] l = new double[2];
+            l[0] = data.get(i).x;
+            l[1] = data.get(i).y;
+            list.add(l);
+        }
+        return list;
+    }
+
+    /**
      * 求范数
-     * */
-    private static double norm(double x1,double x2,double y1,double y2){
+     */
+    private static double norm(double x1, double x2, double y1, double y2) {
         //x2-x1,y2-y1
-        return Math.sqrt(Math.pow((x2-x1),2)+Math.pow((y2-y1),2));
+        return Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
     }
 }

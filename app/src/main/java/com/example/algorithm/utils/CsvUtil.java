@@ -95,6 +95,8 @@ public class CsvUtil {
         return null;
     }
 
+
+
     /**
      * 当csv文件中的数据  已经是局部坐标系时使用
      * 读取csv，放入集合中
@@ -102,10 +104,46 @@ public class CsvUtil {
      * @param csvPath
      * @return
      */
-    public static ArrayList<GeoHelper.Pt> cutDataNoToENU(String csvPath) {
+    public static ArrayList<GeoHelper.Pt> cutDataNoToENU(String csvPath,Context context) {
+        InputStreamReader is;
+        ArrayList<GeoHelper.Pt> get_x_y = new ArrayList<>();
         ArrayList<GeoHelper.Pt> result = new ArrayList<>();
+        String[] getstr;
+        String[] getstr2;
+        ArrayList<String[]> lists = new ArrayList<String[]>();
+        try {
+            is = new InputStreamReader(context.getAssets().open(csvPath));
+            BufferedReader reader = new BufferedReader(is);
+            reader.readLine();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                StringTokenizer st = new StringTokenizer(line, "|");
+                while (st.hasMoreTokens()) {
+                    String str = st.nextToken();
+                    getstr = StringUtils.split(str, ",");
+                    getstr2 = java.util.Arrays.copyOf(getstr, 2);
+                    lists.add(getstr2);
+                }
+            }
+            if (lists != null) {
+                for (int i = 0; i < lists.size(); i++) {
+                    double x = 0;
+                    double y = 0;
+                    pt = new GeoHelper.Pt();
+                    for (int j = 0; j < 2; j++) {
+                        x = Double.parseDouble(lists.get(i)[0]);
+                        y = Double.parseDouble(lists.get(i)[1]);
+                    }
+                    pt.x = x;
+                    pt.y = y;
+                    get_x_y.add(pt);
+                }
+            }
 
-        return result;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return get_x_y;
     }
 
     /**
@@ -352,7 +390,6 @@ public class CsvUtil {
 
     /**
      * 返回曲线的每个点的矢量
-     * 多了一位!!!
      */
     public static List<double[]> countNormK(ArrayList<GeoHelper.Pt> data) {
         int dataLength = data.size();
@@ -427,6 +464,12 @@ public class CsvUtil {
             double[] l = new double[2];
             l[0] = b2 / (Math.sqrt(Math.pow(a2, 2) + Math.pow(b2, 2)));
             l[1] = a2 / (Math.sqrt(Math.pow(a2, 2) + Math.pow(b2, 2)));
+
+            double setToNorm = norm(l[0],l[1]);
+
+            l[0] = l[0]/setToNorm;
+            l[1] = l[1]/setToNorm;
+
             list.set(i, l);
 
             if (i == 1) {
@@ -447,6 +490,9 @@ public class CsvUtil {
     public static List<double[]> countSpeedVector(ArrayList<GeoHelper.Pt> csvData) {
         int dataLength = csvData.size();
         List<double[]> cutData = threeToTwo(csvData);
+
+
+
         for (int i = 0; i < dataLength - 1; i++) {
             double[] thisPoint = cutData.get(i);
             double[] nextPoint = cutData.get(i + 1);
@@ -454,13 +500,29 @@ public class CsvUtil {
             double[] vector = new double[2];
             vector[0] = nextPoint[0] - thisPoint[0];
             vector[1] = nextPoint[1] - thisPoint[1];
+
+            //向量归一化
+            double setToNorm = norm(vector[0],vector[1]);
+            vector[0] = vector[0]/setToNorm;
+
+            vector[1] = vector[1]/setToNorm;
+
             cutData.set(i, vector);
             if (i == dataLength - 2) {
                 cutData.set(dataLength - 1, vector);
             }
         }
 
+
+
         return cutData;
+    }
+
+    /**
+     * 向量归一化
+     */
+    private static double norm(double x, double y){
+        return Math.sqrt(Math.pow(x,2)+Math.pow(y,2));
     }
 
     /**
@@ -485,21 +547,6 @@ public class CsvUtil {
             result[i] = a1 * b2 - a2 * b1;
         }
         return result;
-        /*int dataLength = a.size();
-        List<double[]> list_a = new ArrayList<>(dataLength);
-        List<double[]> list_b = new ArrayList<>(dataLength);
-        for (int i =0;i<dataLength;i++){
-            double[] l  = new double[3];
-            double[] ll = new double[3];
-            l[0] = a.get(i)[0];
-            l[1] = a.get(i)[1];
-            l[2] = 0;
-            list_a.add(l);
-            ll[0] = b.get(i)[0];
-            ll[1] = b.get(i)[1];
-            ll[2] = 0;
-            list_b.add(ll);
-        }*/
     }
 
 
@@ -526,5 +573,46 @@ public class CsvUtil {
     private static double norm(double x1, double x2, double y1, double y2) {
         //x2-x1,y2-y1
         return Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
+    }
+
+    //平移曲线，使用局部坐标系,enu东北天
+    public static ArrayList<GeoHelper.Pt> translationNEU(ArrayList<GeoHelper.Pt> lineCSV,
+                                                   int direction, double distance) {
+        ArrayList<GeoHelper.Pt> originalData = new ArrayList<>(lineCSV.size());
+        //originalData = lineCSV;
+        switch (direction) {
+            case 1://北
+                for (GeoHelper.Pt data : originalData) {
+                    data.y += distance;
+                }
+                break;
+            case 2://南
+                for (GeoHelper.Pt data : originalData) {
+                    data.y -= distance;
+                }
+                break;
+            case 3://西
+                for (GeoHelper.Pt data : originalData) {
+                    data.x -= distance;
+                }
+                break;
+            case 4://东
+                for (int i =0;i<lineCSV.size();i++) {
+
+                    GeoHelper.Pt p = new GeoHelper.Pt();
+                    p.x = lineCSV.get(i).x +distance;
+                    p.y = lineCSV.get(i).y+ distance;
+                    originalData.add(p);
+                }
+                break;
+            case 5://东北
+                for (GeoHelper.Pt data : originalData) {
+                    data.x += distance/Math.sqrt(2);
+                    data.y+=distance/Math.sqrt(2);
+                }
+            default:
+                break;
+        }
+        return originalData;
     }
 }

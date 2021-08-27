@@ -44,133 +44,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int PERMISSION_REQUEST = 1;
     private static final String TAG = "MainActivity-------->";
     private Button getDataBtn, translationBtn, btn3;
-    private ScrollView mainLayout;
-    private ArrayList<GeoHelper.Pt> csvLists = new ArrayList<>();
-    private CsvUtil csvUtil;
     private TextView showData;
-    ArrayList<GeoHelper.Pt> get = new ArrayList<>();
     private ArrayList<GeoHelper.Pt> beforeCSV = new ArrayList<>();
     private ArrayList<GeoHelper.Pt> afterCSV = new ArrayList<>();
-    private static final double lonMi = 0.00001141; //经度每移动1米度数变化
-    private static final double latMi = 0.00000899;//维度每移动1米度数变化
     private static final double CarWidth = 3;//车宽设置为3m
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        checkPermission();
+        checkPermission();//检查并申请权限
         super.onCreate(savedInstanceState);
-        //android11 新特性，需要强制启用
-        //XXPermissions.setScopedStorage(true);
         setContentView(R.layout.activity_main);
         initBind();//初始化控件
+        beforeCSV = CsvUtil.cutDataNoToENU("path.csv",this);
+        Log.i(TAG, "beforeCSV的长度: " + beforeCSV.size());
+        afterCSV = LTTB.getLTTB(beforeCSV, beforeCSV.size() / 3);//使用过滤算法，点数降为1/3
+        Log.i(TAG, "fromCSV: " + afterCSV.size());
 
-        //平移曲线
-        //translationCurve(afterCSV, 1, 10);
-        //平移曲线，使用局部坐标系
-        //translationNEU(afterCSV, 1, 10);
-    }
-
-    //平移曲线，使用局部坐标系,enu东北天
-    private ArrayList<GeoHelper.Pt> translationNEU(ArrayList<GeoHelper.Pt> lineCSV,
-                                                   int direction, double distance) {
-        ArrayList<GeoHelper.Pt> originalData = new ArrayList<>();
-        originalData = lineCSV;
-        switch (direction) {
-            case 1://北
-                for (GeoHelper.Pt data : originalData) {
-                    data.y += 10;
-                }
-                break;
-            case 2://南
-                for (GeoHelper.Pt data : originalData) {
-                    data.y -= 10;
-                }
-                break;
-            case 3://西
-                for (GeoHelper.Pt data : originalData) {
-                    data.x -= 10;
-                }
-                break;
-            case 4://东
-                for (GeoHelper.Pt data : originalData) {
-                    data.x += 10;
-                }
-                break;
-            default:
-                break;
-        }
-        return originalData;
-    }
-
-    //实现平移曲线的函数 , 参数：数据集、方向、平移的米数
-    private ArrayList<GeoHelper.Pt> translationCurve(ArrayList<GeoHelper.Pt> lineCSV,
-                                                     int direction, double distance) {
-        ArrayList<GeoHelper.Pt> originalData = new ArrayList<>();
-        originalData = CsvUtil.getJw();
-        switch (direction) {
-            case 1://北,纬度+
-                for (GeoHelper.Pt data : originalData) {
-                    data.x = data.x + distance * latMi;
-                }
-                break;
-            case 2://南，纬度-
-                for (GeoHelper.Pt data : originalData) {
-                    data.x = data.x - distance * latMi;
-                }
-                break;
-            case 3://西，经度-，默认东经
-                for (GeoHelper.Pt data : originalData) {
-                    data.y = data.x - distance * lonMi;
-                }
-                break;
-            case 4://东，经度+，默认东经
-                for (GeoHelper.Pt data : originalData) {
-                    data.y = data.x + distance * lonMi;
-                }
-                break;
-            default:
-                break;
-        }
-        return originalData;
-    }
-
-    //初始化控件以及设置文本框可复制粘贴
-    private void initBind() {
-
-        mainLayout = findViewById(R.id.main_layout);
-        translationBtn = findViewById(R.id.btn_translation);
-        getDataBtn = findViewById(R.id.btn_get_data);
-        btn3 = findViewById(R.id.btn_pingyi_c);
-        //kBtnData.setVisibility(View.GONE);//第二个按钮设置为不可见
-        showData = findViewById(R.id.reducedData);
-        showData.setMovementMethod(ScrollingMovementMethod.getInstance());
-        int _sdkLevel = Build.VERSION.SDK_INT;
-        if (_sdkLevel >= 11) {
-            showData.setTextIsSelectable(true);
-        } else {
-            showData.setFocusableInTouchMode(true);
-            showData.setFocusable(true);
-            showData.setClickable(true);
-            showData.setLongClickable(true);
-            showData.setMovementMethod(ArrowKeyMovementMethod.getInstance());
-            showData.setText(showData.getText(), TextView.BufferType.SPANNABLE);
-        }
-        csvUtil = new CsvUtil(this);
-        getDataBtn.setOnClickListener(this);
-        translationBtn.setOnClickListener(this);
-        btn3.setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_translation://向北平移10米
-                ArrayList<GeoHelper.Pt> enuData = new ArrayList<>();
                 StringBuilder sb = new StringBuilder();
-                enuData = translationNEU(afterCSV, 1, 3);
+                ArrayList<GeoHelper.Pt> enuData = CsvUtil.translationNEU(afterCSV, 4, 3);
                 for (GeoHelper.Pt data : enuData) {
-                    //String string = String.valueOf(data.x).concat("," + String.valueOf(data.y).concat("," + String.valueOf(data.z)) + "\n");
-                    String string = String.valueOf(data.x).concat("," + String.valueOf(data.y)) + "\n";
+                    String string = String.valueOf(data.x).concat("," + data.y) + "\n";
                     sb.append(string);
                 }
                 showData.setText(sb);
@@ -180,14 +79,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.btn_pingyi_c:
                 //通过曲率计算平移曲线
-                Toast.makeText(this, "111111", Toast.LENGTH_SHORT).show();
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        showData.setText(fromCurvature());
+                        showData.setText(printToTV(fromCurvature(beforeCSV)));
                     }
                 });
-
                 break;
             default:
                 break;
@@ -196,21 +93,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //将csv文件解析到文本框当中
     private StringBuilder fromCSV() {
-
-        beforeCSV = csvUtil.fetch_csv("refPoses.csv");
-        for (int i = 0; i < 5; i++) {
-            Log.d(TAG, "beforeCSV打印输出前5行 ---->: " + beforeCSV.get(i).x + "," + beforeCSV.get(i).y + "," + beforeCSV.get(i).z);
-        }
-        Log.i(TAG, "beforeCSV的长度: " + beforeCSV.size());
-        if (beforeCSV.size() == 0) return null;
-        afterCSV = LTTB.getLTTB(beforeCSV, beforeCSV.size() / 3);//使用过滤算法，点数降为1/3
-        for (int i = 0; i < 5; i++) {
-            Log.d(TAG, "afterCSV打印输出前5行 ---->: " + afterCSV.get(i).x + "," + afterCSV.get(i).y + "," + afterCSV.get(i).z);
-        }
-        Log.i(TAG, "fromCSV: " + afterCSV.size());
         StringBuilder sb = new StringBuilder();
         for (GeoHelper.Pt data : afterCSV) {
-            //String string = String.valueOf(data.x).concat("," + String.valueOf(data.y).concat("," + String.valueOf(data.z)) + "\n");
             String string = String.valueOf(data.x).concat("," + data.y + "\n");
             sb.append(string);
         }
@@ -222,54 +106,80 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * <p>
      * i+1  -i  得到速度矢量
      */
-    private StringBuilder fromCurvature() {
-        StringBuilder sb = new StringBuilder();
-        beforeCSV = csvUtil.fetch_csv("refPoses.csv");
-        afterCSV = LTTB.getLTTB(beforeCSV, beforeCSV.size() / 3);//使用过滤算法，点数降为1/3
-        Log.i(TAG, "fromCurvature " + afterCSV.size());
-        System.out.println(" fromCurvature zhe    " + afterCSV.get(0));
-
+    private List<double[]> fromCurvature(ArrayList<GeoHelper.Pt> csv) {
+        int csvLength = csv.size();
         //List<Double> getCurvature = CsvUtil.countCurvature(afterCSV);      //得到该数据集中每个点对应的曲率
-        List<double[]> getTranslationVector = CsvUtil.countNormK(afterCSV);  //得到矢量点的集合
-        List<double[]> getSpeedVector = CsvUtil.countSpeedVector(afterCSV);  //得到速度矢量的集合
+        List<double[]> getTranslationVector = CsvUtil.countNormK(csv);  //得到矢量点的集合
+        List<double[]> getSpeedVector = CsvUtil.countSpeedVector(csv);  //得到速度矢量的集合
         double[] z = CsvUtil.countVectorProduct(getSpeedVector,getTranslationVector);  // 得到z的值，可以判断它向外侧还是内侧
+        for (double[] dd: getTranslationVector){
+            Log.d(TAG, "fromCurvature: ------>"+dd[0]+" , "+dd[1]);
+        }
         //z 用来 判断 曲率的圆心指向的方向 ， 如果和平移的方向相反， 那就取负数 ， 原始数据点加上矢量乘以车宽
         List<double[]> translationAfterData = new ArrayList<>(afterCSV.size()); // 放新的计算后的数据
-        for (int i = 0;i<afterCSV.size();i++){
-            //向北平移一个车身
+        for (int i = 0;i<csvLength;i++){
+            //向矢量所指向的方向平移一个车身的距离
             double[] l =new double[2];
-            if (z[i]>0){
-                l[0] = afterCSV.get(i).x;
-                l[1] = afterCSV.get(i).y+getTranslationVector.get(i)[1]*CarWidth;
+            if (z[i]<0){
+                l[0] = csv.get(i).x+getTranslationVector.get(i)[0]*CarWidth;
+                l[1] = csv.get(i).y+getTranslationVector.get(i)[1]*CarWidth;
             }else{
-                l[0] = afterCSV.get(i).x;
-                l[1] = afterCSV.get(i).y-getTranslationVector.get(i)[1]*CarWidth;
+                l[0] = csv.get(i).x-getTranslationVector.get(i)[0]*CarWidth;
+                l[1] = csv.get(i).y-getTranslationVector.get(i)[1]*CarWidth;
             }
-            translationAfterData.add(l);  // 报错
+            translationAfterData.add(l);
         }
+        return translationAfterData;
+    }
 
-        //打印 getVector 输出
-        for (int i = 0; i < 10; i++) {
-            Log.d(TAG, "fromCurvature: ---->" + getTranslationVector.get(i)[0] + "    " + getTranslationVector.get(i)[1]);
-        }
-
-        /*List<double[]> list = new ArrayList<>(getTranslationVector.size());
-        for (int i = 0; i < getTranslationVector.size(); i++) {
-            double[] l = new double[2];
-            for (int j = 0; j < 2; j++) {
-                l[j] = getTranslationVector.get(i)[j];  // 车宽在这里即是圆的半径 ， 矢量*半径得到圆心画过的轨迹
-            }
-            list.add(l);
-        }*/
-        for (double[] qq : translationAfterData) {
-            String string = String.valueOf(qq[0]).concat("," + qq[1]) + "\n";
+    /**
+     * 把list打印成string，方便放入textView打印出来
+     * @param list
+     * @return
+     */
+    private StringBuilder printToTV(List<double[]> list){
+        StringBuilder sb = new StringBuilder();
+        for (double[] dd:list){
+            String string = String.valueOf(dd[0]).concat("," + dd[1]) + "\n";
             sb.append(string);
         }
         return sb;
     }
 
+    /**
+     * 传入text，以显示在 提示 中
+     *
+     * @param text
+     */
+    public void toast(String text) {
+        Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show();
+    }
+
+    //初始化控件以及设置文本框可复制粘贴
+    private void initBind() {
+        translationBtn = findViewById(R.id.btn_translation);
+        getDataBtn = findViewById(R.id.btn_get_data);
+        btn3 = findViewById(R.id.btn_pingyi_c);
+        showData = findViewById(R.id.reducedData);
+        showData.setMovementMethod(ScrollingMovementMethod.getInstance());
+        getDataBtn.setOnClickListener(this);
+        translationBtn.setOnClickListener(this);
+        btn3.setOnClickListener(this);
+
+        int _sdkLevel = Build.VERSION.SDK_INT;
+        if (_sdkLevel >= 11) {
+            showData.setTextIsSelectable(true);
+        } else {
+            showData.setFocusableInTouchMode(true);
+            showData.setFocusable(true);
+            showData.setClickable(true);
+            showData.setLongClickable(true);
+            showData.setMovementMethod(ArrowKeyMovementMethod.getInstance());
+            showData.setText(showData.getText(), TextView.BufferType.SPANNABLE);
+        }
+    }
     //检查权限，如果没有则跳转到权限申请页面
-    private void checkPermission() {
+    private void checkPermission(){
         List<String> mPermissionList = new ArrayList<>();
         String[] permissions = {Manifest.permission.INTERNET,
                 Manifest.permission.READ_PHONE_STATE,
@@ -285,22 +195,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String[] permissionss = mPermissionList.toArray(new String[mPermissionList.size()]);
             ActivityCompat.requestPermissions(MainActivity.this, permissionss, PERMISSION_REQUEST);
         }
-    }
-
-    /**
-     * 传入text，以显示在 提示 中
-     *
-     * @param text
-     */
-    public void toast(String text) {
-        Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show();
-    }
-
-    /**
-     * 速度矢量，下一个点剪去当前点的二维数组
-     * 获得速度矢量，然后
-     */
-    private void getTranslationData() {
-
     }
 }

@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initBind();//初始化控件
-        beforeCSV = CsvUtil.cutDataNoToENU("path.csv",this);
+        beforeCSV = CsvUtil.cutDataNoToENU("ping3.csv",this);
         Log.i(TAG, "beforeCSV的长度: " + beforeCSV.size());
         afterCSV = LTTB.getLTTB(beforeCSV, beforeCSV.size() / 3);//使用过滤算法，点数降为1/3
         Log.i(TAG, "fromCSV: " + afterCSV.size());
@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (v.getId()) {
             case R.id.btn_translation://向北平移10米
                 StringBuilder sb = new StringBuilder();
-                ArrayList<GeoHelper.Pt> enuData = CsvUtil.translationNEU(afterCSV, 4, 3);
+                ArrayList<GeoHelper.Pt> enuData = CsvUtil.translationNEU(afterCSV, 1, 0.5);
                 for (GeoHelper.Pt data : enuData) {
                     String string = String.valueOf(data.x).concat("," + data.y) + "\n";
                     sb.append(string);
@@ -108,7 +108,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private List<double[]> fromCurvature(ArrayList<GeoHelper.Pt> csv) {
         int csvLength = csv.size();
-        //List<Double> getCurvature = CsvUtil.countCurvature(afterCSV);      //得到该数据集中每个点对应的曲率
+        List<Double> getCurvature = CsvUtil.countCurvature(afterCSV);      //得到该数据集中每个点对应的曲率
+
+        for (int i = 0;i<getCurvature.size();i++){
+            String sb = getCurvature.get(i).toString();
+            Log.d(TAG, "fromCurvature: "+sb);
+        }
+
         List<double[]> getTranslationVector = CsvUtil.countNormK(csv);  //得到矢量点的集合
         List<double[]> getSpeedVector = CsvUtil.countSpeedVector(csv);  //得到速度矢量的集合
         double[] z = CsvUtil.countVectorProduct(getSpeedVector,getTranslationVector);  // 得到z的值，可以判断它向外侧还是内侧
@@ -144,15 +150,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             sb.append(string);
         }
         return sb;
-    }
-
-    /**
-     * 传入text，以显示在 提示 中
-     *
-     * @param text
-     */
-    public void toast(String text) {
-        Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show();
     }
 
     //初始化控件以及设置文本框可复制粘贴

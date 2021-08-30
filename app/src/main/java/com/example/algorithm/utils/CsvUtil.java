@@ -53,7 +53,7 @@ public class CsvUtil {
         ArrayList<GeoHelper.Pt> result = new ArrayList<>();
         String[] getstr;
         String[] getstr2;
-        ArrayList<String[]> lists = new ArrayList<String[]>();
+        ArrayList<String[]> lists = new ArrayList<>();
         try {
             //照着这个修改读取文件 https://blog.csdn.net/weixin_42119866/article/details/117488597?utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-3.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-3.control
             is = new InputStreamReader(context.getAssets().open(csvPath));
@@ -308,6 +308,10 @@ public class CsvUtil {
 
     public static List<Double> countCurvature(ArrayList<GeoHelper.Pt> data) {
         List<Double> allCurvature = new ArrayList<>(data.size());
+        double d = 0;
+        for (int jj = 0;jj<data.size();jj++){
+            allCurvature.add(1.1);
+        }
         int dataLength = data.size();
         ArrayList<GeoHelper.Pt> curvedData = new ArrayList<>(dataLength);
         //计算第二个点~倒数第二个点 之间的数据
@@ -335,7 +339,7 @@ public class CsvUtil {
             Matrix dense = DenseMatrix.Factory.zeros(3, 3);
 
             for (int j = 0; j < 3; j++) {
-                dense.setAsDouble(1, i, 0);
+                dense.setAsDouble(1, j, 0);
             }
             for (int k = 1; k < 3; k++) {
                 dense.setAsDouble(0, 1, k);
@@ -367,19 +371,29 @@ public class CsvUtil {
             double b3 = b.getAsDouble(2, 0);
             //最终曲率
             double curvature = (2 * (a3 * b2 - a2 * b3)) / ((Math.pow(a2, 2) + Math.pow(b2, 2)) * Math.sqrt((Math.pow(a2, 2) + Math.pow(b2, 2))));
-            allCurvature.set(i, curvature);
+            allCurvature.set(i,curvature);
 
             //将首尾赋值他们相邻的数
-            if (i == 1) {
+            /*if (i == 1) {
                 allCurvature.set(0, curvature);
             } else if (i == dataLength - 2) {
                 //allCurvature.set(dataLength - 1,curvature);
                 allCurvature.add(curvature);
+            }*/
+
+            /*for (int j =0;j<allCurvature.size();j++){
+
+            }*/
+            if (i==dataLength-2){
+                  d= curvature;
             }
+
+            allCurvature.set(allCurvature.size()-1,d);
+
             List<Double[]> list = new ArrayList<>();
             Double[] l = new Double[2];
             l[0] = b2 / (Math.sqrt(Math.pow(a2, 2) + Math.pow(b2, 2)));
-            l[1] = a2 / (Math.sqrt(Math.pow(a2, 2) + Math.pow(b2, 2)));
+            l[1] = -a2 / (Math.sqrt(Math.pow(a2, 2) + Math.pow(b2, 2)));
             list.add(l);
 
 
@@ -463,7 +477,7 @@ public class CsvUtil {
 
             double[] l = new double[2];
             l[0] = b2 / (Math.sqrt(Math.pow(a2, 2) + Math.pow(b2, 2)));
-            l[1] = a2 / (Math.sqrt(Math.pow(a2, 2) + Math.pow(b2, 2)));
+            l[1] = -a2 / (Math.sqrt(Math.pow(a2, 2) + Math.pow(b2, 2)));
 
             double setToNorm = norm(l[0],l[1]);
 
@@ -578,37 +592,47 @@ public class CsvUtil {
     //平移曲线，使用局部坐标系,enu东北天
     public static ArrayList<GeoHelper.Pt> translationNEU(ArrayList<GeoHelper.Pt> lineCSV,
                                                    int direction, double distance) {
-        ArrayList<GeoHelper.Pt> originalData = new ArrayList<>(lineCSV.size());
+        ArrayList<GeoHelper.Pt> originalData = new ArrayList<>();
         //originalData = lineCSV;
         switch (direction) {
             case 1://北
-                for (GeoHelper.Pt data : originalData) {
-                    data.y += distance;
-                }
-                break;
-            case 2://南
-                for (GeoHelper.Pt data : originalData) {
-                    data.y -= distance;
-                }
-                break;
-            case 3://西
-                for (GeoHelper.Pt data : originalData) {
-                    data.x -= distance;
-                }
-                break;
-            case 4://东
                 for (int i =0;i<lineCSV.size();i++) {
-
                     GeoHelper.Pt p = new GeoHelper.Pt();
-                    p.x = lineCSV.get(i).x +distance;
+                    p.x = lineCSV.get(i).x;
                     p.y = lineCSV.get(i).y+ distance;
                     originalData.add(p);
                 }
                 break;
+            case 2://南
+                for (int i =0;i<lineCSV.size();i++) {
+                    GeoHelper.Pt p = new GeoHelper.Pt();
+                    p.x = lineCSV.get(i).x;
+                    p.y = lineCSV.get(i).y- distance;
+                    originalData.add(p);
+                }
+                break;
+            case 3://西
+                for (int i =0;i<lineCSV.size();i++) {
+                    GeoHelper.Pt p = new GeoHelper.Pt();
+                    p.x = lineCSV.get(i).x- distance;
+                    p.y = lineCSV.get(i).y;
+                    originalData.add(p);
+                }
+                break;
+            case 4://东
+                for (int i =0;i<lineCSV.size();i++) {
+                    GeoHelper.Pt p = new GeoHelper.Pt();
+                    p.x = lineCSV.get(i).x +distance;
+                    p.y = lineCSV.get(i).y;
+                    originalData.add(p);
+                }
+                break;
             case 5://东北
-                for (GeoHelper.Pt data : originalData) {
-                    data.x += distance/Math.sqrt(2);
-                    data.y+=distance/Math.sqrt(2);
+                for (int i =0;i<lineCSV.size();i++) {
+                    GeoHelper.Pt p = new GeoHelper.Pt();
+                    p.x = lineCSV.get(i).x +distance/Math.sqrt(2);
+                    p.y = lineCSV.get(i).y +distance/Math.sqrt(2);
+                    originalData.add(p);
                 }
             default:
                 break;
